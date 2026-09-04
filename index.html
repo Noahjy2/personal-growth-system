@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>序 · 个人成长闭环系统 V2</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Microsoft YaHei",Arial,sans-serif;background:#f5f7fa;color:#172033}
+header{background:#111827;color:#fff;padding:24px 32px}
+header h1{margin:0 0 5px;font-size:26px}
+header p{margin:0;color:#cbd5e1}
+nav{max-width:1180px;margin:18px auto 0;padding:0 18px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{background:#fff;color:#374151;border:1px solid #dbe1e8}
+nav button.active{background:#111827;color:#fff}
+main{max-width:1180px;margin:18px auto;padding:0 18px}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff;border:1px solid #e7ebf0;border-radius:14px;padding:20px;box-shadow:0 2px 10px #00000008}
+.full{grid-column:1/-1}
+h2{font-size:18px;margin:0 0 14px}.stat{font-size:30px;font-weight:700}
+.muted{color:#6b7280;font-size:14px}.small{font-size:12px;color:#6b7280}
+.progress{height:10px;background:#e8ecf1;border-radius:20px;overflow:hidden;margin:10px 0}
+.progress div{height:100%;background:#111827;transition:.25s}
+input,textarea,select,button{font:inherit}
+input[type=text],input[type=number],input[type=date],textarea,select{width:100%;padding:10px;border:1px solid #d5dbe3;border-radius:8px;margin:6px 0 12px;background:#fff}
+textarea{min-height:90px;resize:vertical}
+button{border:0;border-radius:8px;padding:9px 14px;background:#111827;color:#fff;cursor:pointer}
+button.secondary{background:#e9edf2;color:#172033}button.danger{background:#f0dfe0;color:#7b2025}
+button:hover{opacity:.9}
+.task{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #edf0f3}
+.task:last-child{border-bottom:0}.task.done span{text-decoration:line-through;color:#9aa2ad}
+.form{display:grid;grid-template-columns:1fr auto;gap:10px}.form input{margin:0}
+.form3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.badge{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf0f4;color:#4b5563;font-size:12px;margin:2px}
+.item{padding:12px 0;border-bottom:1px solid #edf0f3}.item:last-child{border:0}
+.metric{display:flex;justify-content:space-between;margin:7px 0}
+.metric b{font-size:16px}.note{padding:12px;background:#f7f8fa;border-radius:9px;margin-top:10px}
+canvas{width:100%;height:240px;border:1px solid #edf0f3;border-radius:10px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi .card{padding:15px}.kpi .stat{font-size:24px}
+.empty{text-align:center;padding:20px;color:#8a929e}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.form3{grid-template-columns:1fr}.kpi{grid-template-columns:1fr 1fr}}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111827">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="序">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+</head>
+<body>
+<header>
+<h1>序 · 个人成长闭环系统 V2</h1>
+<p>不是记录“做了什么”，而是观察“做了以后有没有真正向目标前进”。</p>
+</header>
+
+<nav>
+<button class="active" onclick="showPage('dashboard',this)">仪表盘</button>
+<button onclick="showPage('tasks',this)">任务</button>
+<button onclick="showPage('learning',this)">学习记录</button>
+<button onclick="showPage('review',this)">每日复盘</button>
+<button onclick="showPage('analytics',this)">数据分析</button>
+<button onclick="showPage('settings',this)">数据管理</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page active">
+<div class="grid">
+<div class="card"><h2>今日进度</h2><div class="stat" id="pct">0%</div><div class="progress"><div id="bar"></div></div><div class="muted" id="summary">0 / 0 个任务完成</div></div>
+<div class="card"><h2>当前精力</h2><div class="stat"><span id="energyValue">7</span>/10</div><input id="energy" type="range" min="1" max="10" value="7" style="width:100%"><div class="muted">今天可用的精力</div></div>
+<div class="card"><h2>长期目标</h2><div class="stat" style="font-size:22px">财务自由</div><p class="muted">能力 → 收入 → 资本 → 选择权</p></div>
+
+<div class="card full"><h2>今日任务</h2><div id="dashTasks"></div></div>
+
+<div class="card"><h2>今日状态</h2>
+<div class="metric"><span>睡眠</span><b id="sleepShow">-- 小时</b></div>
+<div class="metric"><span>深度工作</span><b id="deepShow">-- 分钟</b></div>
+<div class="metric"><span>学习</span><b id="learnShow">-- 分钟</b></div>
+</div>
+
+<div class="card"><h2>序的今日评价</h2><div id="evaluation"></div></div>
+
+<div class="card"><h2>闭环状态</h2>
+<div class="metric"><span>目标</span><b>✓</b></div>
+<div class="metric"><span>行动</span><b id="actionStatus">—</b></div>
+<div class="metric"><span>结果</span><b id="resultStatus">—</b></div>
+<div class="metric"><span>反馈</span><b id="feedbackStatus">—</b></div>
+<div class="metric"><span>调整</span><b id="adjustStatus">—</b></div>
+</div>
+</div>
+</section>
+
+<section id="tasks" class="page">
+<div class="card">
+<h2>任务管理</h2>
+<div class="form"><input id="taskInput" type="text" placeholder="例如：Java OOP 60 分钟"><button onclick="addTask()">添加任务</button></div>
+<div id="taskList"></div>
+</div>
+</section>
+
+<section id="learning" class="page">
+<div class="card">
+<h2>学习记录</h2>
+<input id="topic" type="text" placeholder="学习主题，例如：第一性原理">
+<textarea id="learned" placeholder="我学到了什么？"></textarea>
+<textarea id="apply" placeholder="我准备如何运用？"></textarea>
+<div class="form3"><div><label class="small">学习时间（分钟）</label><input id="learnMinutes" type="number" min="0" value="30"></div><div><label class="small">理解程度 1–10</label><input id="understanding" type="number" min="1" max="10" value="7"></div><div><label class="small">是否实际运用</label><select id="applied"><option value="否">否</option><option value="是">是</option></select></div></div>
+<button onclick="saveLearning()">保存学习记录</button>
+<div id="learningHistory"></div>
+</div>
+</section>
+
+<section id="review" class="page">
+<div class="card">
+<h2>每日复盘</h2>
+<div class="form3"><div><label class="small">睡眠（小时）</label><input id="sleep" type="number" min="0" max="24" step="0.5" placeholder="例如 7"></div><div><label class="small">深度工作（分钟）</label><input id="deep" type="number" min="0" placeholder="例如 90"></div><div><label class="small">今日精力</label><input id="reviewEnergy" type="number" min="1" max="10" placeholder="1–10"></div></div>
+<textarea id="forward" placeholder="今天什么真正推动了我？"></textarea>
+<textarea id="problem" placeholder="什么没有起作用？为什么？"></textarea>
+<textarea id="change" placeholder="明天具体调整什么？"></textarea>
+<textarea id="result" placeholder="今天的结果是什么？有没有接近目标？"></textarea>
+<button onclick="saveReview()">保存复盘</button>
+<div id="reviewHistory"></div>
+</div>
+</section>
+
+<section id="analytics" class="page">
+<div class="kpi">
+<div class="card"><div class="muted">累计学习</div><div class="stat" id="totalLearn">0m</div></div>
+<div class="card"><div class="muted">学习记录</div><div class="stat" id="logCount">0</div></div>
+<div class="card"><div class="muted">平均理解</div><div class="stat" id="avgUnderstand">--</div></div>
+<div class="card"><div class="muted">实际应用率</div><div class="stat" id="applyRate">--</div></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>最近 7 天精力</h2><canvas id="chart" width="1000" height="240"></canvas></div>
+<div class="card" style="margin-top:16px"><h2>长期反馈</h2><div id="insights"></div></div>
+</section>
+
+<section id="settings" class="page">
+<div class="card">
+<h2>数据管理</h2>
+<p class="muted">数据目前保存在浏览器 localStorage。导出后可以保存备份，之后可导入回来。</p>
+<button onclick="exportData()">导出数据</button>
+<button class="secondary" onclick="document.getElementById('importFile').click()">导入数据</button>
+<input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(event)">
+<button class="danger" onclick="clearData()">清空全部数据</button>
+<div class="note"><strong>V2 核心：</strong>目标 → 行动 → 结果 → 反馈 → 调整，而不是单纯追踪任务数量。</div>
+</div>
+</section>
+</main>
+
+<script>
+const KEY="personalProgressV2";
+let data=JSON.parse(localStorage.getItem(KEY)||'{"tasks":[],"learning":[],"reviews":[],"energy":7}');
+const today=()=>new Date().toISOString().slice(0,10);
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function showPage(id,btn){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");if(id==="analytics")renderAnalytics()}
+function addTask(){let x=document.getElementById("taskInput");if(!x.value.trim())return;data.tasks.push({text:x.value.trim(),done:false,date:today()});x.value="";save();renderAll()}
+function toggleTask(i){data.tasks[i].done=!data.tasks[i].done;save();renderAll()}
+function deleteTask(i){data.tasks.splice(i,1);save();renderAll()}
+function taskHTML(compact=false){let list=data.tasks;return list.length?list.map((t,i)=>`<div class="task ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${i})"><span style="flex:1">${esc(t.text)}</span>${compact?'':`<button class="danger" onclick="deleteTask(${i})">删除</button>`}</div>`).join(""):'<div class="empty">今天还没有任务。</div>'}
+function renderTasks(){document.getElementById("taskList").innerHTML=taskHTML(false);document.getElementById("dashTasks").innerHTML=taskHTML(true)}
+function saveLearning(){
+let topic=document.getElementById("topic").value.trim();if(!topic)return;
+data.learning.unshift({date:today(),topic,learned:document.getElementById("learned").value,apply:document.getElementById("apply").value,minutes:+document.getElementById("learnMinutes").value||0,understanding:+document.getElementById("understanding").value||0,applied:document.getElementById("applied").value});
+["topic","learned","apply"].forEach(id=>document.getElementById(id).value="");save();renderAll();alert("学习记录已保存。")}
+function saveReview(){
+data.reviews.unshift({date:today(),sleep:+document.getElementById("sleep").value||0,deep:+document.getElementById("deep").value||0,energy:+document.getElementById("reviewEnergy").value||data.energy,forward:document.getElementById("forward").value,problem:document.getElementById("problem").value,change:document.getElementById("change").value,result:document.getElementById("result").value});
+["sleep","deep","reviewEnergy","forward","problem","change","result"].forEach(id=>document.getElementById(id).value="");save();renderAll();alert("今日复盘已保存。")}
+function renderHistory(){
+document.getElementById("learningHistory").innerHTML=data.learning.slice(0,8).map(x=>`<div class="item"><b>${esc(x.topic)}</b><span class="small"> · ${x.date} · ${x.minutes}分钟 · 理解 ${x.understanding}/10 · 应用：${x.applied}</span><div class="muted">${esc(x.learned||"")}</div></div>`).join("")||'<div class="empty">还没有学习记录。</div>';
+document.getElementById("reviewHistory").innerHTML=data.reviews.slice(0,7).map(x=>`<div class="item"><b>${x.date}</b><div class="small">睡眠 ${x.sleep}h · 深度工作 ${x.deep}m · 精力 ${x.energy}/10</div><div class="muted">${esc(x.result||"")}</div></div>`).join("")||'<div class="empty">还没有复盘。</div>'}
+function renderDashboard(){
+let total=data.tasks.length,done=data.tasks.filter(x=>x.done).length,p=total?Math.round(done/total*100):0;
+document.getElementById("pct").textContent=p+"%";document.getElementById("bar").style.width=p+"%";document.getElementById("summary").textContent=`${done} / ${total} 个任务完成`;
+document.getElementById("energy").value=data.energy;document.getElementById("energyValue").textContent=data.energy;
+let r=data.reviews.find(x=>x.date===today()),ls=data.learning.filter(x=>x.date===today());
+document.getElementById("sleepShow").textContent=r?.sleep?r.sleep+" 小时":"-- 小时";document.getElementById("deepShow").textContent=r?.deep?r.deep+" 分钟":"-- 分钟";document.getElementById("learnShow").textContent=ls.reduce((a,b)=>a+b.minutes,0)+" 分钟";
+let hasAction=done>0||ls.length>0,hasResult=!!r?.result,hasFeedback=!!r?.problem,hasAdjust=!!r?.change;
+document.getElementById("actionStatus").textContent=hasAction?"✓":"—";document.getElementById("resultStatus").textContent=hasResult?"✓":"—";document.getElementById("feedbackStatus").textContent=hasFeedback?"✓":"—";document.getElementById("adjustStatus").textContent=hasAdjust?"✓":"—";
+let score=Math.round((p+(hasResult?100:0)+(hasFeedback?100:0)+(hasAdjust?100:0))/4);
+let msg=score>=75?"今天已经形成较完整的行动闭环。":score>=40?"今天有行动，但反馈或调整还不完整。":"今天更像是输入/计划阶段，还没有形成完整闭环。";
+document.getElementById("evaluation").innerHTML=`<div class="stat" style="font-size:24px">${score}/100</div><p>${msg}</p><div class="note">建议：${hasAdjust?"明天按今天的调整继续验证。":"在今天结束前记录一个结果，并写下明天的具体调整。"}</div>`}
+function renderAnalytics(){
+let total=data.learning.reduce((a,b)=>a+b.minutes,0),n=data.learning.length,avg=n?(data.learning.reduce((a,b)=>a+b.understanding,0)/n).toFixed(1):"--",rate=n?Math.round(data.learning.filter(x=>x.applied==="是").length/n*100):"--";
+document.getElementById("totalLearn").textContent=total+"m";document.getElementById("logCount").textContent=n;document.getElementById("avgUnderstand").textContent=avg==="--"?"--":avg+"/10";document.getElementById("applyRate").textContent=rate==="--"?"--":rate+"%";
+let reviews=[...data.reviews].slice(0,7).reverse(),c=document.getElementById("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#d8dde5";ctx.beginPath();ctx.moveTo(50,20);ctx.lineTo(50,h-35);ctx.lineTo(w-20,h-35);ctx.stroke();ctx.strokeStyle="#111827";ctx.lineWidth=3;ctx.beginPath();reviews.forEach((r,i)=>{let x=60+i*(Math.max(1,(w-100)/Math.max(1,reviews.length-1))),y=h-35-(r.energy/10)*(h-65);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.fillStyle="#4b5563";ctx.font="14px Arial";reviews.forEach((r,i)=>{let x=60+i*(Math.max(1,(w-100)/Math.max(1,reviews.length-1)));ctx.fillText(r.energy+"/10",x-12,h-10)});document.getElementById("insights").innerHTML=buildInsights()}
+function buildInsights(){
+if(!data.reviews.length&&!data.learning.length)return '<div class="empty">积累一些数据后，这里会出现你的长期规律。</div>';
+let out=[],r=data.reviews.filter(x=>x.sleep>0);if(r.length>=3){let low=r.filter(x=>x.sleep<6),high=r.filter(x=>x.sleep>=7);if(low.length&&high.length){let a=low.reduce((s,x)=>s+x.energy,0)/low.length,b=high.reduce((s,x)=>s+x.energy,0)/high.length;out.push(`睡眠低于 6 小时的记录中，平均精力约 ${a.toFixed(1)}/10；睡眠至少 7 小时的记录中约 ${b.toFixed(1)}/10。`)}}
+let applied=data.learning.filter(x=>x.applied==="是").length;if(data.learning.length>=3)out.push(`你目前记录了 ${data.learning.length} 次学习，其中 ${applied} 次标记为已实际运用。`);
+if(data.reviews.length>=3){let avg=data.reviews.reduce((s,x)=>s+x.energy,0)/data.reviews.length;out.push(`已记录复盘的平均精力为 ${avg.toFixed(1)}/10。`)}
+return out.map(x=>`<div class="note">${x}</div>`).join("")||'<div class="empty">继续积累数据。</div>'}
+function exportData(){let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="personal-progress-backup.json";a.click();URL.revokeObjectURL(a.href)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();renderAll();alert("数据导入成功。")}catch{alert("文件格式无效。")}};r.readAsText(f)}
+function clearData(){if(confirm("确定清空全部数据吗？此操作不可撤销。")){data={tasks:[],learning:[],reviews:[],energy:7};save();renderAll()}}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+document.getElementById("energy").oninput=e=>{data.energy=+e.target.value;document.getElementById("energyValue").textContent=data.energy;save();renderDashboard()}
+function renderAll(){renderTasks();renderHistory();renderDashboard();if(document.getElementById("analytics").classList.contains("active"))renderAnalytics()}
+renderAll();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+
+</body>
+</html>
